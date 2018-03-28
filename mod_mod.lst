@@ -1,0 +1,206 @@
+   1               		.file	"mod_mod.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               	.global	__floatunsisf
+  11               	.global	__mulsf3
+  12               	.global	__addsf3
+  13               	.global	__subsf3
+  14               	.global	__divsf3
+  15               	.global	__fixunssfsi
+  16               		.section	.text.startup,"ax",@progbits
+  17               	.global	main
+  19               	main:
+  20               	.LFB2:
+  21               		.file 1 "mod_mod.c"
+   1:mod_mod.c     **** #include <avr/io.h>
+   2:mod_mod.c     **** #include <math.h>
+   3:mod_mod.c     **** 
+   4:mod_mod.c     **** #define baseperiod (1.0/8000000.0*8.0)
+   5:mod_mod.c     **** #define A440 2273
+   6:mod_mod.c     **** #define A440by2 (A440>>1)
+   7:mod_mod.c     **** #define scaletop 85
+   8:mod_mod.c     **** #define scalebottom 24
+   9:mod_mod.c     **** #define scalerange (float)(scaletop-scalebottom)/(float)(1024)
+  10:mod_mod.c     **** #define reffreq (float)440.0
+  11:mod_mod.c     **** 
+  12:mod_mod.c     **** int main(void) {
+  22               		.loc 1 12 0
+  23               		.cfi_startproc
+  24               	/* prologue: function */
+  25               	/* frame size = 0 */
+  26               	/* stack size = 0 */
+  27               	.L__stack_usage = 0
+  13:mod_mod.c     **** 	DDRB=1<<DDB1;
+  28               		.loc 1 13 0
+  29 0000 82E0      		ldi r24,lo8(2)
+  30 0002 84B9      		out 0x4,r24
+  14:mod_mod.c     **** 	DDRB=1<<DDB1;
+  31               		.loc 1 14 0
+  32 0004 84B9      		out 0x4,r24
+  15:mod_mod.c     **** 
+  16:mod_mod.c     **** 	// Initialize the PWM
+  17:mod_mod.c     **** 	OCR1A = A440by2; // Set the initial toggle period to half the A440 frequency
+  33               		.loc 1 17 0
+  34 0006 80E7      		ldi r24,lo8(112)
+  35 0008 94E0      		ldi r25,lo8(4)
+  36 000a 9093 8900 		sts 136+1,r25
+  37 000e 8093 8800 		sts 136,r24
+  18:mod_mod.c     **** 	TCCR1A =  1 << WGM11 | 1 << WGM10 | 0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode, Fast PWM
+  38               		.loc 1 18 0
+  39 0012 83E4      		ldi r24,lo8(67)
+  40 0014 8093 8000 		sts 128,r24
+  19:mod_mod.c     **** 	TCCR1B = 1 << WGM13 | 1 << WGM12 | 0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast
+  41               		.loc 1 19 0
+  42 0018 8AE1      		ldi r24,lo8(26)
+  43 001a 8093 8100 		sts 129,r24
+  20:mod_mod.c     **** 	
+  21:mod_mod.c     **** 	//Initialize the ADC
+  22:mod_mod.c     **** 	ADMUX = 1 << REFS0 | 0 << ADLAR | 0 << MUX0; // Use AVCC for reference, left align result, select 
+  44               		.loc 1 22 0
+  45 001e 80E4      		ldi r24,lo8(64)
+  46 0020 8093 7C00 		sts 124,r24
+  23:mod_mod.c     **** 	ADCSRA = 1 << ADEN | 0 << ADATE | 0 << ADIE | 6 << ADPS0; // Enable ADC, no auto trigger or interr
+  47               		.loc 1 23 0
+  48 0024 86E8      		ldi r24,lo8(-122)
+  49 0026 8093 7A00 		sts 122,r24
+  24:mod_mod.c     **** 	DIDR0 = 1 << ADC0D;
+  50               		.loc 1 24 0
+  51 002a 81E0      		ldi r24,lo8(1)
+  52 002c 8093 7E00 		sts 126,r24
+  53               	.L3:
+  54               	.LBB2:
+  25:mod_mod.c     **** 	while (1) {
+  26:mod_mod.c     **** 		ADCSRA |= (1 << ADSC);
+  55               		.loc 1 26 0
+  56 0030 8091 7A00 		lds r24,122
+  57 0034 8064      		ori r24,lo8(64)
+  58 0036 8093 7A00 		sts 122,r24
+  59               	.L2:
+  27:mod_mod.c     **** 		while (ADCSRA & (1 << ADSC)) {			
+  60               		.loc 1 27 0 discriminator 1
+  61 003a 8091 7A00 		lds r24,122
+  62 003e 86FD      		sbrc r24,6
+  63 0040 00C0      		rjmp .L2
+  28:mod_mod.c     **** 			// Wait for conversion to finish
+  29:mod_mod.c     **** 		}
+  30:mod_mod.c     **** 		float volt = (float) ADC;
+  64               		.loc 1 30 0
+  65 0042 6091 7800 		lds r22,120
+  66 0046 7091 7900 		lds r23,120+1
+  67               	.LVL0:
+  68 004a 80E0      		ldi r24,0
+  69 004c 90E0      		ldi r25,0
+  70 004e 0E94 0000 		call __floatunsisf
+  71               	.LVL1:
+  31:mod_mod.c     **** //		float note = floor(volt*scalerange+(float)scalebottom);
+  32:mod_mod.c     **** 		float note = volt*scalerange+(float)scalebottom;
+  72               		.loc 1 32 0
+  73 0052 20E0      		ldi r18,0
+  74 0054 30E0      		ldi r19,0
+  75 0056 44E7      		ldi r20,lo8(116)
+  76 0058 52E4      		ldi r21,lo8(66)
+  77 005a 0E94 0000 		call __mulsf3
+  78               	.LVL2:
+  79 005e 20E0      		ldi r18,0
+  80 0060 30E0      		ldi r19,0
+  81 0062 40E8      		ldi r20,lo8(-128)
+  82 0064 5AE3      		ldi r21,lo8(58)
+  83 0066 0E94 0000 		call __mulsf3
+  84               	.LVL3:
+  85 006a 20E0      		ldi r18,0
+  86 006c 30E0      		ldi r19,0
+  87 006e 40EC      		ldi r20,lo8(-64)
+  88 0070 51E4      		ldi r21,lo8(65)
+  89 0072 0E94 0000 		call __addsf3
+  90               	.LVL4:
+  33:mod_mod.c     **** 		float freq = reffreq*pow(2,((note-57.0)/12.0));
+  91               		.loc 1 33 0
+  92 0076 20E0      		ldi r18,0
+  93 0078 30E0      		ldi r19,0
+  94 007a 44E6      		ldi r20,lo8(100)
+  95 007c 52E4      		ldi r21,lo8(66)
+  96 007e 0E94 0000 		call __subsf3
+  97               	.LVL5:
+  98 0082 20E0      		ldi r18,0
+  99 0084 30E0      		ldi r19,0
+ 100 0086 40E4      		ldi r20,lo8(64)
+ 101 0088 51E4      		ldi r21,lo8(65)
+ 102 008a 0E94 0000 		call __divsf3
+ 103               	.LVL6:
+ 104 008e 9B01      		movw r18,r22
+ 105 0090 AC01      		movw r20,r24
+ 106 0092 60E0      		ldi r22,0
+ 107 0094 70E0      		ldi r23,0
+ 108 0096 80E0      		ldi r24,0
+ 109 0098 90E4      		ldi r25,lo8(64)
+ 110 009a 0E94 0000 		call pow
+ 111               	.LVL7:
+ 112 009e 20E0      		ldi r18,0
+ 113 00a0 30E0      		ldi r19,0
+ 114 00a2 4CED      		ldi r20,lo8(-36)
+ 115 00a4 53E4      		ldi r21,lo8(67)
+ 116 00a6 0E94 0000 		call __mulsf3
+ 117               	.LVL8:
+ 118 00aa 9B01      		movw r18,r22
+ 119 00ac AC01      		movw r20,r24
+  34:mod_mod.c     **** 		float period = 1.0/freq/2.0;
+ 120               		.loc 1 34 0
+ 121 00ae 60E0      		ldi r22,0
+ 122 00b0 70E0      		ldi r23,0
+ 123 00b2 80E8      		ldi r24,lo8(-128)
+ 124 00b4 9FE3      		ldi r25,lo8(63)
+ 125 00b6 0E94 0000 		call __divsf3
+ 126               	.LVL9:
+ 127 00ba 20E0      		ldi r18,0
+ 128 00bc 30E0      		ldi r19,0
+ 129 00be 40E0      		ldi r20,0
+ 130 00c0 5FE3      		ldi r21,lo8(63)
+ 131 00c2 0E94 0000 		call __mulsf3
+ 132               	.LVL10:
+  35:mod_mod.c     **** 		unsigned int counts = (period/baseperiod);		
+ 133               		.loc 1 35 0
+ 134 00c6 2DEB      		ldi r18,lo8(-67)
+ 135 00c8 37E3      		ldi r19,lo8(55)
+ 136 00ca 46E8      		ldi r20,lo8(-122)
+ 137 00cc 55E3      		ldi r21,lo8(53)
+ 138 00ce 0E94 0000 		call __divsf3
+ 139               	.LVL11:
+ 140 00d2 0E94 0000 		call __fixunssfsi
+ 141               	.LVL12:
+  36:mod_mod.c     **** 		OCR1A = counts; // Write the calculated 16 bit number into the register.
+ 142               		.loc 1 36 0
+ 143 00d6 7093 8900 		sts 136+1,r23
+ 144 00da 6093 8800 		sts 136,r22
+ 145               	.LBE2:
+  37:mod_mod.c     **** 	}
+ 146               		.loc 1 37 0
+ 147 00de 00C0      		rjmp .L3
+ 148               		.cfi_endproc
+ 149               	.LFE2:
+ 151               		.text
+ 152               	.Letext0:
+ 153               		.file 2 "d:\\avr8-gnu-toolchain\\avr\\include\\stdint.h"
+ 154               		.file 3 "d:\\avr8-gnu-toolchain\\avr\\include\\math.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 mod_mod.c
+C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:2      *ABS*:0000003e __SP_H__
+C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:3      *ABS*:0000003d __SP_L__
+C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:4      *ABS*:0000003f __SREG__
+C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:5      *ABS*:00000000 __tmp_reg__
+C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:6      *ABS*:00000001 __zero_reg__
+C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:19     .text.startup:00000000 main
+
+UNDEFINED SYMBOLS
+__floatunsisf
+__mulsf3
+__addsf3
+__subsf3
+__divsf3
+__fixunssfsi
+pow
