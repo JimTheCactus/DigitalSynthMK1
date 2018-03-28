@@ -13,19 +13,19 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   4 .debug_aranges 00000020  00000000  00000000  000009e4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   0000071d  00000000  00000000  00000a04  2**0
+  5 .debug_info   0000072f  00000000  00000000  00000a04  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 00000642  00000000  00000000  00001121  2**0
+  6 .debug_abbrev 00000651  00000000  00000000  00001133  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000000ed  00000000  00000000  00001763  2**0
+  7 .debug_line   000000f3  00000000  00000000  00001784  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000024  00000000  00000000  00001850  2**2
+  8 .debug_frame  00000024  00000000  00000000  00001878  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000314  00000000  00000000  00001874  2**0
+  9 .debug_str    0000031b  00000000  00000000  0000189c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    00000096  00000000  00000000  00001b88  2**0
+ 10 .debug_loc    00000096  00000000  00000000  00001bb7  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 00000010  00000000  00000000  00001c1e  2**0
+ 11 .debug_ranges 00000010  00000000  00000000  00001c4d  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -154,24 +154,37 @@ int main(void) {
  10a:	94 e0       	ldi	r25, 0x04	; 4
  10c:	90 93 89 00 	sts	0x0089, r25	; 0x800089 <__TEXT_REGION_LENGTH__+0x7e0089>
  110:	80 93 88 00 	sts	0x0088, r24	; 0x800088 <__TEXT_REGION_LENGTH__+0x7e0088>
-	TCCR1A =  1 << WGM11 | 1 << WGM10 | 0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode, Fast PWM
+	TCCR1A = 
  114:	83 e4       	ldi	r24, 0x43	; 67
  116:	80 93 80 00 	sts	0x0080, r24	; 0x800080 <__TEXT_REGION_LENGTH__+0x7e0080>
-	TCCR1B = 1 << WGM13 | 1 << WGM12 | 0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast PWM
+		1 << WGM11 | 1 << WGM10 | // Set Fast PWM
+		0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode
+	TCCR1B =
  11a:	8a e1       	ldi	r24, 0x1A	; 26
  11c:	80 93 81 00 	sts	0x0081, r24	; 0x800081 <__TEXT_REGION_LENGTH__+0x7e0081>
+		1 << WGM13 | 1 << WGM12 | // Set Fast PWN
+		0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast PWM
 	
-	//Initialize the ADC
-	ADMUX = 1 << REFS0 | 0 << ADLAR | 0 << MUX0; // Use AVCC for reference, left align result, select pin 0
+	// Initialize the ADC
+	ADMUX =
  120:	80 e4       	ldi	r24, 0x40	; 64
  122:	80 93 7c 00 	sts	0x007C, r24	; 0x80007c <__TEXT_REGION_LENGTH__+0x7e007c>
-	ADCSRA = 1 << ADEN | 0 << ADATE | 0 << ADIE | 6 << ADPS0; // Enable ADC, no auto trigger or interrupts, use /64 prescaler
+		1 << REFS0 | // Use AVCC for reference
+		0 << ADLAR | // Right align result
+		0 << MUX0; // Select pin 0
+	ADCSRA =
  126:	86 e8       	ldi	r24, 0x86	; 134
  128:	80 93 7a 00 	sts	0x007A, r24	; 0x80007a <__TEXT_REGION_LENGTH__+0x7e007a>
-	DIDR0 = 1 << ADC0D;
+		1 << ADEN | // Enable ADC
+		0 << ADATE | // No auto trigger
+		0 << ADIE | // No interrupt
+		6 << ADPS0; // use /64 prescaler
+	DIDR0 = 1 << ADC0D; // Disable digital IO buffer on ADC0
  12c:	81 e0       	ldi	r24, 0x01	; 1
  12e:	80 93 7e 00 	sts	0x007E, r24	; 0x80007e <__TEXT_REGION_LENGTH__+0x7e007e>
+
 	while (1) {
+		// Kick things off
 		ADCSRA |= (1 << ADSC);
  132:	80 91 7a 00 	lds	r24, 0x007A	; 0x80007a <__TEXT_REGION_LENGTH__+0x7e007a>
  136:	80 64       	ori	r24, 0x40	; 64
@@ -188,10 +201,11 @@ int main(void) {
  14c:	80 e0       	ldi	r24, 0x00	; 0
  14e:	90 e0       	ldi	r25, 0x00	; 0
  150:	0e 94 ff 01 	call	0x3fe	; 0x3fe <__floatunsisf>
+//		float note = floor(volt*scalerange+(float)scalebottom);
 		float note = volt*scalerange+(float)scalebottom;
  154:	20 e0       	ldi	r18, 0x00	; 0
  156:	30 e0       	ldi	r19, 0x00	; 0
- 158:	40 e7       	ldi	r20, 0x70	; 112
+ 158:	44 e7       	ldi	r20, 0x74	; 116
  15a:	52 e4       	ldi	r21, 0x42	; 66
  15c:	0e 94 8d 02 	call	0x51a	; 0x51a <__mulsf3>
  160:	20 e0       	ldi	r18, 0x00	; 0
@@ -240,14 +254,14 @@ int main(void) {
  1c0:	40 e0       	ldi	r20, 0x00	; 0
  1c2:	5f e3       	ldi	r21, 0x3F	; 63
  1c4:	0e 94 8d 02 	call	0x51a	; 0x51a <__mulsf3>
-		
-		OCR1A = (unsigned int) (period/baseperiod); //ADCH << 8 | ADCL;
+		unsigned int counts = (period/baseperiod);		
  1c8:	2d eb       	ldi	r18, 0xBD	; 189
  1ca:	37 e3       	ldi	r19, 0x37	; 55
  1cc:	46 e8       	ldi	r20, 0x86	; 134
  1ce:	55 e3       	ldi	r21, 0x35	; 53
  1d0:	0e 94 5e 01 	call	0x2bc	; 0x2bc <__divsf3>
  1d4:	0e 94 d0 01 	call	0x3a0	; 0x3a0 <__fixunssfsi>
+		OCR1A = counts; // Write the calculated 16 bit number into the register.
  1d8:	70 93 89 00 	sts	0x0089, r23	; 0x800089 <__TEXT_REGION_LENGTH__+0x7e0089>
  1dc:	60 93 88 00 	sts	0x0088, r22	; 0x800088 <__TEXT_REGION_LENGTH__+0x7e0088>
 	}

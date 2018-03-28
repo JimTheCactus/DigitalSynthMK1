@@ -51,46 +51,59 @@
   35 0008 94E0      		ldi r25,lo8(4)
   36 000a 9093 8900 		sts 136+1,r25
   37 000e 8093 8800 		sts 136,r24
-  18:mod_mod.c     **** 	TCCR1A =  1 << WGM11 | 1 << WGM10 | 0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode, Fast PWM
+  18:mod_mod.c     **** 	TCCR1A = 
   38               		.loc 1 18 0
   39 0012 83E4      		ldi r24,lo8(67)
   40 0014 8093 8000 		sts 128,r24
-  19:mod_mod.c     **** 	TCCR1B = 1 << WGM13 | 1 << WGM12 | 0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast
-  41               		.loc 1 19 0
+  19:mod_mod.c     **** 		1 << WGM11 | 1 << WGM10 | // Set Fast PWM
+  20:mod_mod.c     **** 		0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode
+  21:mod_mod.c     **** 	TCCR1B =
+  41               		.loc 1 21 0
   42 0018 8AE1      		ldi r24,lo8(26)
   43 001a 8093 8100 		sts 129,r24
-  20:mod_mod.c     **** 	
-  21:mod_mod.c     **** 	//Initialize the ADC
-  22:mod_mod.c     **** 	ADMUX = 1 << REFS0 | 0 << ADLAR | 0 << MUX0; // Use AVCC for reference, left align result, select 
-  44               		.loc 1 22 0
+  22:mod_mod.c     **** 		1 << WGM13 | 1 << WGM12 | // Set Fast PWN
+  23:mod_mod.c     **** 		0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast PWM
+  24:mod_mod.c     **** 	
+  25:mod_mod.c     **** 	// Initialize the ADC
+  26:mod_mod.c     **** 	ADMUX =
+  44               		.loc 1 26 0
   45 001e 80E4      		ldi r24,lo8(64)
   46 0020 8093 7C00 		sts 124,r24
-  23:mod_mod.c     **** 	ADCSRA = 1 << ADEN | 0 << ADATE | 0 << ADIE | 6 << ADPS0; // Enable ADC, no auto trigger or interr
-  47               		.loc 1 23 0
+  27:mod_mod.c     **** 		1 << REFS0 | // Use AVCC for reference
+  28:mod_mod.c     **** 		0 << ADLAR | // Right align result
+  29:mod_mod.c     **** 		0 << MUX0; // Select pin 0
+  30:mod_mod.c     **** 	ADCSRA =
+  47               		.loc 1 30 0
   48 0024 86E8      		ldi r24,lo8(-122)
   49 0026 8093 7A00 		sts 122,r24
-  24:mod_mod.c     **** 	DIDR0 = 1 << ADC0D;
-  50               		.loc 1 24 0
+  31:mod_mod.c     **** 		1 << ADEN | // Enable ADC
+  32:mod_mod.c     **** 		0 << ADATE | // No auto trigger
+  33:mod_mod.c     **** 		0 << ADIE | // No interrupt
+  34:mod_mod.c     **** 		6 << ADPS0; // use /64 prescaler
+  35:mod_mod.c     **** 	DIDR0 = 1 << ADC0D; // Disable digital IO buffer on ADC0
+  50               		.loc 1 35 0
   51 002a 81E0      		ldi r24,lo8(1)
   52 002c 8093 7E00 		sts 126,r24
   53               	.L3:
   54               	.LBB2:
-  25:mod_mod.c     **** 	while (1) {
-  26:mod_mod.c     **** 		ADCSRA |= (1 << ADSC);
-  55               		.loc 1 26 0
+  36:mod_mod.c     **** 
+  37:mod_mod.c     **** 	while (1) {
+  38:mod_mod.c     **** 		// Kick things off
+  39:mod_mod.c     **** 		ADCSRA |= (1 << ADSC);
+  55               		.loc 1 39 0
   56 0030 8091 7A00 		lds r24,122
   57 0034 8064      		ori r24,lo8(64)
   58 0036 8093 7A00 		sts 122,r24
   59               	.L2:
-  27:mod_mod.c     **** 		while (ADCSRA & (1 << ADSC)) {			
-  60               		.loc 1 27 0 discriminator 1
+  40:mod_mod.c     **** 		while (ADCSRA & (1 << ADSC)) {			
+  60               		.loc 1 40 0 discriminator 1
   61 003a 8091 7A00 		lds r24,122
   62 003e 86FD      		sbrc r24,6
   63 0040 00C0      		rjmp .L2
-  28:mod_mod.c     **** 			// Wait for conversion to finish
-  29:mod_mod.c     **** 		}
-  30:mod_mod.c     **** 		float volt = (float) ADC;
-  64               		.loc 1 30 0
+  41:mod_mod.c     **** 			// Wait for conversion to finish
+  42:mod_mod.c     **** 		}
+  43:mod_mod.c     **** 		float volt = (float) ADC;
+  64               		.loc 1 43 0
   65 0042 6091 7800 		lds r22,120
   66 0046 7091 7900 		lds r23,120+1
   67               	.LVL0:
@@ -98,9 +111,9 @@
   69 004c 90E0      		ldi r25,0
   70 004e 0E94 0000 		call __floatunsisf
   71               	.LVL1:
-  31:mod_mod.c     **** //		float note = floor(volt*scalerange+(float)scalebottom);
-  32:mod_mod.c     **** 		float note = volt*scalerange+(float)scalebottom;
-  72               		.loc 1 32 0
+  44:mod_mod.c     **** //		float note = floor(volt*scalerange+(float)scalebottom);
+  45:mod_mod.c     **** 		float note = volt*scalerange+(float)scalebottom;
+  72               		.loc 1 45 0
   73 0052 20E0      		ldi r18,0
   74 0054 30E0      		ldi r19,0
   75 0056 44E7      		ldi r20,lo8(116)
@@ -119,8 +132,8 @@
   88 0070 51E4      		ldi r21,lo8(65)
   89 0072 0E94 0000 		call __addsf3
   90               	.LVL4:
-  33:mod_mod.c     **** 		float freq = reffreq*pow(2,((note-57.0)/12.0));
-  91               		.loc 1 33 0
+  46:mod_mod.c     **** 		float freq = reffreq*pow(2,((note-57.0)/12.0));
+  91               		.loc 1 46 0
   92 0076 20E0      		ldi r18,0
   93 0078 30E0      		ldi r19,0
   94 007a 44E6      		ldi r20,lo8(100)
@@ -149,8 +162,8 @@
  117               	.LVL8:
  118 00aa 9B01      		movw r18,r22
  119 00ac AC01      		movw r20,r24
-  34:mod_mod.c     **** 		float period = 1.0/freq/2.0;
- 120               		.loc 1 34 0
+  47:mod_mod.c     **** 		float period = 1.0/freq/2.0;
+ 120               		.loc 1 47 0
  121 00ae 60E0      		ldi r22,0
  122 00b0 70E0      		ldi r23,0
  123 00b2 80E8      		ldi r24,lo8(-128)
@@ -163,8 +176,8 @@
  130 00c0 5FE3      		ldi r21,lo8(63)
  131 00c2 0E94 0000 		call __mulsf3
  132               	.LVL10:
-  35:mod_mod.c     **** 		unsigned int counts = (period/baseperiod);		
- 133               		.loc 1 35 0
+  48:mod_mod.c     **** 		unsigned int counts = (period/baseperiod);		
+ 133               		.loc 1 48 0
  134 00c6 2DEB      		ldi r18,lo8(-67)
  135 00c8 37E3      		ldi r19,lo8(55)
  136 00ca 46E8      		ldi r20,lo8(-122)
@@ -173,13 +186,13 @@
  139               	.LVL11:
  140 00d2 0E94 0000 		call __fixunssfsi
  141               	.LVL12:
-  36:mod_mod.c     **** 		OCR1A = counts; // Write the calculated 16 bit number into the register.
- 142               		.loc 1 36 0
+  49:mod_mod.c     **** 		OCR1A = counts; // Write the calculated 16 bit number into the register.
+ 142               		.loc 1 49 0
  143 00d6 7093 8900 		sts 136+1,r23
  144 00da 6093 8800 		sts 136,r22
  145               	.LBE2:
-  37:mod_mod.c     **** 	}
- 146               		.loc 1 37 0
+  50:mod_mod.c     **** 	}
+ 146               		.loc 1 50 0
  147 00de 00C0      		rjmp .L3
  148               		.cfi_endproc
  149               	.LFE2:
@@ -189,12 +202,12 @@
  154               		.file 3 "d:\\avr8-gnu-toolchain\\avr\\include\\math.h"
 DEFINED SYMBOLS
                             *ABS*:00000000 mod_mod.c
-C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:2      *ABS*:0000003e __SP_H__
-C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:3      *ABS*:0000003d __SP_L__
-C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:4      *ABS*:0000003f __SREG__
-C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:5      *ABS*:00000000 __tmp_reg__
-C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:6      *ABS*:00000001 __zero_reg__
-C:\Users\jtc-b\AppData\Local\Temp\cclX8wfr.s:19     .text.startup:00000000 main
+C:\Users\jtc-b\AppData\Local\Temp\cc5xMBWg.s:2      *ABS*:0000003e __SP_H__
+C:\Users\jtc-b\AppData\Local\Temp\cc5xMBWg.s:3      *ABS*:0000003d __SP_L__
+C:\Users\jtc-b\AppData\Local\Temp\cc5xMBWg.s:4      *ABS*:0000003f __SREG__
+C:\Users\jtc-b\AppData\Local\Temp\cc5xMBWg.s:5      *ABS*:00000000 __tmp_reg__
+C:\Users\jtc-b\AppData\Local\Temp\cc5xMBWg.s:6      *ABS*:00000001 __zero_reg__
+C:\Users\jtc-b\AppData\Local\Temp\cc5xMBWg.s:19     .text.startup:00000000 main
 
 UNDEFINED SYMBOLS
 __floatunsisf

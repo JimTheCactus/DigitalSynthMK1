@@ -15,14 +15,27 @@ int main(void) {
 
 	// Initialize the PWM
 	OCR1A = A440by2; // Set the initial toggle period to half the A440 frequency
-	TCCR1A =  1 << WGM11 | 1 << WGM10 | 0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode, Fast PWM
-	TCCR1B = 1 << WGM13 | 1 << WGM12 | 0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast PWM
+	TCCR1A = 
+		1 << WGM11 | 1 << WGM10 | // Set Fast PWM
+		0 <<COM1A1 | 1<<COM1A0; // Enable toggle mode
+	TCCR1B =
+		1 << WGM13 | 1 << WGM12 | // Set Fast PWN
+		0 << CS12 | 1 << CS11 | 0 << CS10; // Enable /8 prescaler, Fast PWM
 	
-	//Initialize the ADC
-	ADMUX = 1 << REFS0 | 0 << ADLAR | 0 << MUX0; // Use AVCC for reference, left align result, select pin 0
-	ADCSRA = 1 << ADEN | 0 << ADATE | 0 << ADIE | 6 << ADPS0; // Enable ADC, no auto trigger or interrupts, use /64 prescaler
-	DIDR0 = 1 << ADC0D;
+	// Initialize the ADC
+	ADMUX =
+		1 << REFS0 | // Use AVCC for reference
+		0 << ADLAR | // Right align result
+		0 << MUX0; // Select pin 0
+	ADCSRA =
+		1 << ADEN | // Enable ADC
+		0 << ADATE | // No auto trigger
+		0 << ADIE | // No interrupt
+		6 << ADPS0; // use /64 prescaler
+	DIDR0 = 1 << ADC0D; // Disable digital IO buffer on ADC0
+
 	while (1) {
+		// Kick things off
 		ADCSRA |= (1 << ADSC);
 		while (ADCSRA & (1 << ADSC)) {			
 			// Wait for conversion to finish
